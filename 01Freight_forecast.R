@@ -55,7 +55,7 @@ KBA_xts%>% head(12)
 SNF_prognose<-rbind(SNF_progn["/2009-07-01"],KBA_xts)%>% rbind(.,SNF_progn["2022-07-01/"])
 #save updated data
 saveRDS(SNF_prognose, file = "updated_road_freight.rds")
-
+RoadFreight<- readRDS("updated_road_freight.rds")
 prog_plt<- SNF_prognose%>% ggplot(aes(x=index(SNF_prognose),y= Traffic))+
   geom_point()+
   geom_point(mapping = aes(x=index(SNF_prognose),y=Prognos),col = "red")+
@@ -120,3 +120,30 @@ Freight_plt<-Traffic_predict%>% as_tibble %>% ggplot(aes(x=  Jahr))+
           subtitle = "Logistic model (data 1995:2020 (reported UBA & KBA)  ,2021 preliminary) ")+
   labs(y = "Mrd.tkm",x = "Year")
 ggsave(Freight_plt,filename ="./figs/predicted_road_freight.png")
+#============
+BIP<-read_excel(path = "~/desktop/Klima_Energiewende/Verkehr/Emissionen/Bruttoinlandsprodukt.xls")
+BIP_mdl <- gam(BiP_Billion ~ s(Jahr),data= BIP,method = "REML")
+bip<- getViz(BIP_mdl)
+bip_plt<-plot(sm(bip,1))
+listLayers(bip_plt)
+bip_plt+
+  l_fitLine(colour = "red")+
+  l_ciLine(mul = 5, colour = "blue", linetype = 2)+
+  l_points(shape = 1, size = 3) + 
+  theme_classic()+
+  ggtitle("German GDP Development",
+          subtitle = " scaled ")
+# combine Freight BIP
+my_dat%>%summary()
+BIP%>% summary()
+Traff_dat<-coredata(my_dat)%>% as_tibble()%>% mutate(Year=index(my_dat))
+Traff_dat <- Traff_dat %>%
+  left_join(BIP, by= "Jahr") %>%
+  dplyr::select(Jahr,Traffic,BiP_Billion,Year)%>%
+  mutate(BiP_10_Billion= BiP_Billion/10)%>% dplyr::select(-BiP_Billion)
+Traff_dat%>% ggplot(aes(x= Year))+
+  geom_smooth(aes(x =Jahr,y=BiP_10_Billion))+
+  geom_smooth(aes(x= Jahr, y = Traffic),col ="black")+
+  ggtitle("German Gross Domestic Product [10-Billion-€] & Road Freight [Billion tkm]",
+          subtitle = "Road Freight (black); GDP (blue)")
+
