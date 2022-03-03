@@ -3,7 +3,7 @@ library(mgcViz)
 library(tidyverse)
 #==========================
 # example code
-n  <- 1e3
+n  <- 10e2
 dat <- data.frame("x1" = rnorm(n), "x2" = rnorm(n), "x3" = rnorm(n))
 dat$Y <- with(dat, sin(x1) + 0.5*x2^2 + 0.2*x3 + pmax(x2, 0.2) * rnorm(n))
 range(dat$x1)
